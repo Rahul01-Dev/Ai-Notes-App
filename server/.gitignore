@@ -1,0 +1,17 @@
+# ─── Secrets ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ─── Dependencies ────────────────────────────────────────────────
+node_modules/
+
+# ─── Logs ────────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+
+# ─── Prisma generated client ─────────────────────────────────────
+# The generated client is rebuilt with `prisma generate`; don't track it
+# (Uncomment the next line only if you do NOT want to track the generated client)
+# node_modules/.prisma/
