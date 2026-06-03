@@ -10,7 +10,8 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "node prisma/seed.js",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules NODE_ENV=test jest"
   },
   "dependencies": {
     "@google/genai": "^2.7.0",
@@ -22,9 +23,15 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "prisma": "^5.14.0",
+    "redis": "^6.0.0",
     "zod": "^3.23.8"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "jest": "^30.4.2",
+    "supertest": "^7.2.2"
   }
 }

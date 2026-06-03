@@ -11,7 +11,7 @@ A full-stack AI-powered notes application. Write and manage notes, then ask Gemi
 | Database | PostgreSQL via Prisma 5 |
 | Auth | JWT + bcryptjs |
 | Validation | Zod |
-| AI | Google Gemini 1.5 Flash (`@google/generative-ai`) |
+| AI | Google Gemini 2.5 Flash (`@google/genai`) |
 
 ---
 

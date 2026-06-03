@@ -1,17 +1,28 @@
 // routes/ai.js
 // POST /api/notes/:id/ask
-// Protected by JWT — asks Gemini a question about a specific note
+// Protected by JWT — asks Gemini a question about a specific note.
+// Rate limited: 10 requests per user per day via Redis.
 
 import { Router } from "express";
 import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
 import prisma from "../lib/prismaClient.js";
 import authMiddleware from "../middleware/auth.js";
+import { getRedis } from "../lib/redisClient.js";
 
 const router = Router();
 
 // Apply JWT auth to every AI route
 router.use(authMiddleware);
+
+// ─── Rate-limit config ───────────────────────────────────────────
+const DAILY_LIMIT = 10;
+
+/** Redis key: resets every day (keyed to UTC date so it auto-expires) */
+const rateLimitKey = (userId) => {
+  const date = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+  return `rate:ask:${userId}:${date}`;
+};
 
 // ─── Zod Schema ─────────────────────────────────────────────────
 const askSchema = z.object({
@@ -49,9 +60,50 @@ router.post("/:id/ask", async (req, res) => {
 
   const { question } = result.data;
   const { id } = req.params;
+  const userId = req.user.id;
+
+  // 2. ── Redis rate limiting ────────────────────────────────────
+  try {
+    const redis = await getRedis();
+    if (redis) {
+      const key = rateLimitKey(userId);
+
+      // Atomic increment
+      const count = await redis.incr(key);
+
+      // Set TTL on first request of the day (expires at midnight UTC + buffer)
+      if (count === 1) {
+        const now = new Date();
+        const midnight = new Date(now);
+        midnight.setUTCHours(24, 0, 0, 0);
+        const secondsUntilMidnight = Math.ceil((midnight - now) / 1000);
+        await redis.expire(key, secondsUntilMidnight);
+      }
+
+      if (count > DAILY_LIMIT) {
+        const key2 = rateLimitKey(userId);
+        const ttl = await redis.ttl(key2);
+        const hoursLeft = Math.ceil(ttl / 3600);
+        return res.status(429).json({
+          error: "Daily limit reached",
+          message: `You have used all ${DAILY_LIMIT} AI requests for today. Resets in ~${hoursLeft} hour(s).`,
+          limit: DAILY_LIMIT,
+          used: count - 1,
+          resetsIn: ttl,
+        });
+      }
+
+      // Set rate-limit headers for transparency
+      res.setHeader("X-RateLimit-Limit", DAILY_LIMIT);
+      res.setHeader("X-RateLimit-Remaining", Math.max(0, DAILY_LIMIT - count));
+    }
+  } catch (rlErr) {
+    // Non-fatal — if Redis is down, allow the request through
+    console.warn("Rate-limit check failed (Redis unavailable):", rlErr.message);
+  }
 
   try {
-    // 2. Fetch note and verify ownership in one query
+    // 3. Fetch note and verify ownership in one query
     const note = await prisma.note.findUnique({
       where: { id },
       select: { id: true, title: true, content: true, userId: true },
@@ -61,11 +113,11 @@ router.post("/:id/ask", async (req, res) => {
       return res.status(404).json({ error: "Note not found." });
     }
 
-    if (note.userId !== req.user.id) {
+    if (note.userId !== userId) {
       return res.status(403).json({ error: "You do not have permission to access this note." });
     }
 
-    // 3. Build structured prompt — give Gemini clear context
+    // 4. Build structured prompt — give Gemini clear context
     const prompt = `You are a helpful AI assistant for a notes app.
 The user has a note with the following details:
 
@@ -81,7 +133,7 @@ The user is asking the following question about this note:
 Please answer the question clearly and concisely based on the note content above.
 If the answer cannot be found in the note, say so honestly and offer general help.`;
 
-    // 4. Call Gemini using the new @google/genai SDK
+    // 5. Call Gemini using the new @google/genai SDK
     const client = getClient();
     const geminiResult = await client.models.generateContent({
       model: "gemini-2.5-flash",
@@ -89,7 +141,7 @@ If the answer cannot be found in the note, say so honestly and offer general hel
     });
     const answer = geminiResult.text;
 
-    // 5. Return structured response
+    // 6. Return structured response
     return res.status(200).json({
       noteId: note.id,
       noteTitle: note.title,
