@@ -4,7 +4,7 @@
 
 /* ── Page Layout ───────────────────────────────────────────────── */
 .home-page {
-  min-height: 100vh;
+  min-height: 100dvh;
   background: var(--bg-void);
   overflow: hidden;
   position: relative;
@@ -137,7 +137,7 @@
 .hero-section {
   position: relative;
   z-index: 1;
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
