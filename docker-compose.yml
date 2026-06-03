@@ -1,6 +1,5 @@
 # ─── Named volumes ──────────────────────────────────────────────────────────
 volumes:
-  postgres_data:
   redis_data:
 
 # ─── Shared network ─────────────────────────────────────────────────────────
@@ -9,28 +8,6 @@ networks:
     driver: bridge
 
 services:
-  # ──────────────────────────────────────────────────────────────────────────
-  # PostgreSQL
-  # ──────────────────────────────────────────────────────────────────────────
-  postgres:
-    image: postgres:16-alpine
-    container_name: ai_notes_postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - app_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-      start_period: 60s
-
   # ──────────────────────────────────────────────────────────────────────────
   # Redis
   # ──────────────────────────────────────────────────────────────────────────
@@ -51,7 +28,7 @@ services:
       start_period: 10s
 
   # ──────────────────────────────────────────────────────────────────────────
-  # API (Express + Prisma)
+  # API (Express + Prisma) — uses Neon cloud DB via DATABASE_URL in server/.env
   # ──────────────────────────────────────────────────────────────────────────
   api:
     build:
@@ -60,19 +37,16 @@ services:
     container_name: ai_notes_api
     restart: unless-stopped
     env_file:
-      - ./server/.env
+      - ./server/.env          # DATABASE_URL points to Neon cloud
     environment:
       NODE_ENV: production
       PORT: 5000
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      REDIS_URL: redis://redis:6379
+      REDIS_URL: redis://redis:6379   # override localhost → redis container
     ports:
       - "5000:5000"
     networks:
       - app_network
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
 

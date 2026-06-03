@@ -113,7 +113,7 @@ router.get("/", async (req, res) => {
 
     // 3. Populate cache (fire-and-forget; non-fatal on error)
     if (redis) {
-      redis.set(key, JSON.stringify(payload), { EX: NOTES_TTL }).catch(() => {});
+      redis.set(key, JSON.stringify(payload), { ex: NOTES_TTL }).catch(() => {});
     }
 
     return res.status(200).json(payload);
