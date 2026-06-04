@@ -1,0 +1,35 @@
+services:
+  # ─── Backend API (Express + Prisma) ──────────────────────────────────────────
+  - type: web
+    name: ai-notes-api
+    runtime: docker
+    rootDir: server          # build context = repo root /server/
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: DATABASE_URL
+        sync: false          # set manually in Render dashboard
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false          # or replace with OPENROUTER_API_KEY
+
+  # ─── Frontend Client (React + Vite → Nginx) ───────────────────────────────────
+  - type: web
+    name: ai-notes-client
+    runtime: docker
+    rootDir: client          # build context = repo root /client/
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: VITE_API_URL
+        sync: false          # set to your backend Render URL, e.g. https://ai-notes-api.onrender.com
