@@ -416,6 +416,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 3rem;
   margin-top: 5rem;
   padding: 2rem;
@@ -846,6 +847,8 @@
     width: 300px;
     transform: translate(-50%, -50%) rotateY(0deg) rotateX(2deg);
   }
+  .hero-headline { font-size: clamp(2rem, 8vw, 2.8rem); }
+  .hero-sub { font-size: 1rem; }
   .hero-stats { gap: 1.5rem; }
   .stat-divider { display: none; }
   .cta-card { padding: 3rem 1.5rem; }
@@ -854,4 +857,7 @@
     text-align: center;
     padding: 2rem 1.25rem;
   }
+  .nav-cta { gap: 0.5rem; }
+  .btn-nav-primary { padding: 0.5rem 1rem; }
+  .btn-nav-login { padding: 0.5rem 1rem; }
 }

@@ -898,13 +898,14 @@
 @media (max-width: 900px) {
   .notes-body {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: 35vh 1fr;
   }
 
   .notes-sidebar {
     border-right: none;
     border-bottom: 1px solid var(--border-subtle);
-    max-height: 280px;
+    max-height: none;
+    height: 100%;
   }
 
   .create-textarea { min-height: 48px; }
@@ -915,10 +916,11 @@
   .notes-navbar { padding: 0 1rem; }
   .navbar-user { display: none; }
   .detail-header { padding: 1rem; }
+  .detail-title-input { font-size: 1.25rem; }
   .detail-content-wrap { padding: 0 1rem; }
-  .detail-save-bar { padding: 0.65rem 1rem; }
+  .detail-save-bar { padding: 0.65rem 1rem; flex-wrap: wrap; }
   .ai-panel-header { padding: 0.65rem 1rem; }
   .ai-history { padding: 0.75rem 1rem; }
-  .ai-input-row { padding: 0.65rem 1rem; }
+  .ai-input-row { padding: 0.65rem 1rem; flex-wrap: wrap; }
   .toast { bottom: 1rem; right: 1rem; left: 1rem; }
 }

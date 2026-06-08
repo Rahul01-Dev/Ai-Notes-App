@@ -470,3 +470,12 @@
     transform: none;
   }
 }
+
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 1.5rem 1.25rem;
+  }
+  .auth-title {
+    font-size: 1.5rem;
+  }
+}
